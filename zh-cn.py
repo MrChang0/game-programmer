@@ -14,7 +14,7 @@ except ImportError:
     from urllib2 import urlopen         # Python 2
 
 
-IMAGE_PATH = './images-zh-cn/{book_index}.jpg'
+IMAGE_PATH = 'images-zh-cn/{book_index}.jpg'
 
 def get_image(isbn, image_filename):
     """
@@ -48,7 +48,7 @@ def get_book_info(book_index):
     print("get_book_info(" + book_index + ")")
     title = "未找到中文"
     zh_isbn = ""
-    with open("isbn.csv") as ff:
+    with open("isbn.csv",encoding = 'utf-8') as ff:
         spamreader = csv.reader(ff, delimiter=',')
         for line in spamreader:
             if line[0] == book_index:
@@ -149,18 +149,21 @@ RE_CONTENT_LINE = re.compile(r'[\w ]+\[color="#[\w]{6}", label=[<"]\d+\. [\w ()]
 
 
 if __name__ == '__main__':
-    with open("game-programmer.dot") as en_f, open("game-programmer-zh-cn.dot",'w') as zh_f:
+    with open("game-programmer.dot",encoding='utf-8') as en_f, open("game-programmer-zh-cn.dot",'w',encoding='utf-8') as zh_f:
         for line in en_f:
-            #==== 处理标题
-            if line.strip().startswith('<TR><TD><FONT FACE="Futura" POINT-SIZE="40">A STUDY PATH FOR</FONT></TD></TR>'):
-                zh_f.write('<TR><TD><FONT FACE="Futura" POINT-SIZE="40">游戏程序员的</FONT></TD></TR>')
-                continue
-            elif line.strip().startswith('<TR><TD><FONT FACE="Futura-Bold" POINT-SIZE="40">GAME PROGRAMMER</FONT></TD></TR>'):
-                zh_f.write('<TR><TD><FONT FACE="Futura" POINT-SIZE="40">学习之路</FONT></TD></TR>')
-                continue
-
             line_without_space = line.strip()
             space_front = line[:len(line)-len(line_without_space)-1]
+
+            #==== 处理标题
+            if line_without_space.startswith('<TR><TD><FONT FACE="Futura" POINT-SIZE="40">A STUDY PATH FOR</FONT></TD></TR>'):
+                zh_f.write(space_front+'<TR><TD><FONT FACE="Microsoft YaHei" POINT-SIZE="40">游戏程序员的</FONT></TD></TR>\n')
+                continue
+            elif line_without_space.startswith('<TR><TD><FONT FACE="Futura-Bold" POINT-SIZE="40">GAME PROGRAMMER</FONT></TD></TR>'):
+                zh_f.write(space_front+'<TR><TD><FONT FACE="Microsoft YaHei" POINT-SIZE="40">学习之路</FONT></TD></TR>\n')
+                continue
+            elif line_without_space.startswith('node [fontname') or line_without_space.startswith('edge [fontname'):
+                zh_f.write(space_front+line_without_space.replace('Helvetica-Light','Microsoft YaHei')+'\n')
+                continue
 
             book_line_match = RE_BOOK_LINE.match(line_without_space)
             section_line_match = RE_SECTION_LINE.match(line_without_space)
@@ -174,7 +177,7 @@ if __name__ == '__main__':
                     zh_f.write(line)
                 else:
                     image_path = IMAGE_PATH.format(book_index=book_index.strip('"'))
-                    writeline = space_front+ BOOK_LINE.format(book_index=book_index, image_path=image_path, book_title=book_title, book_year=book_year, url=book_url)
+                    writeline = space_front + BOOK_LINE.format(book_index=book_index, image_path = image_path, book_title = book_title, book_year=book_year, url=book_url)
                     zh_f.write(writeline)
             elif section_line_match is not None:
                 sectionID = re.search(r'\d+\.', line_without_space).group()
